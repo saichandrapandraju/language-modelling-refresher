@@ -27,6 +27,8 @@ def predict_with_count(starting_char:str, num_words):
     g = torch.Generator().manual_seed(SEED)   
     output = []
     for _ in range(num_words):
+        if starting_char not in ctoi:
+            raise ValueError("Starting Character is not a valid alphabet. Please input a valid alphabet.")
         prev = ctoi[starting_char]
         out = []
         out.append(starting_char)
@@ -45,6 +47,8 @@ def predict_with_single_layer_nn(starting_char:str, num_words):
     output = []
     for _ in range(num_words):
         out = []
+        if starting_char not in ctoi:
+            raise ValueError("Starting Character is not a valid alphabet. Please input a valid alphabet.")
         ix = ctoi[starting_char]
         out.append(starting_char)
         while True:
@@ -61,10 +65,13 @@ def predict_with_single_layer_nn(starting_char:str, num_words):
     return output
 
 def predict(query, num_words):
-    preds = [predict_with_count(query, num_words), predict_with_single_layer_nn(query, num_words)]
-    labels = ["Count Based Language Model", "Single Linear Layer Language Model"]
-    results = {labels[idx]: preds[idx] for idx in range(len(preds))}
-    st.write(pd.DataFrame(results, index=range(num_words)))
+    try:
+        preds = [predict_with_count(query, num_words), predict_with_single_layer_nn(query, num_words)]
+        labels = ["Count Based Language Model", "Single Linear Layer Language Model"]
+        results = {labels[idx]: preds[idx] for idx in range(len(preds))}
+        st.write(pd.DataFrame(results, index=range(num_words)))
+    except ValueError as e:
+        st.write(f"ERROR: {e.args[0]}")
 
 # title and description
 st.title("""
@@ -79,4 +86,4 @@ query = st.text_input("Please input the starting character...", "", max_chars=1)
 num_words = st.slider("Number of names to generate:", min_value=1, max_value=50, value=5)
 
 if query != "":
-    predict(query, num_words)
+    predict(query.lower(), num_words)
